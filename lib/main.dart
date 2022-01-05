@@ -18,8 +18,7 @@ void main() {
 
 class ToitServer {
   static final ClientChannel _channel = ClientChannel("api.toit.io");
-  static const String _authorizationToken =
-      "062b7d8ed744c18e133bfec0a87cd7145043ecc474097124d2ec4ac19ff94f01";
+  static const String _authorizationToken = PUT YOUR TOIT AUTHORIZATION TOKEN HERE;
   static final CallOptions _options =
       CallOptions(metadata: {'Authorization': 'Bearer $_authorizationToken'});
 
