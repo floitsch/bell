@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart' as flutterWidgets;
 
 import 'dart:async';
 import 'dart:convert';
@@ -7,9 +8,12 @@ import 'package:toit_api/toit/api/pubsub/publish.pbgrpc.dart'
     show PublishClient, PublishRequest;
 import 'package:toit_api/toit/api/device.pbgrpc.dart';
 import 'package:toit_api/toit/model/device.pb.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
 class ToitServer {
@@ -61,14 +65,57 @@ class ToitServer {
   }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatefulWidget {
+  // Create the initialization Future outside of `build`.
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: "Bell",
-      home: MyHomePage(title: 'Bell'),
+    return FutureBuilder(
+        // Initialize FlutterFire:
+        future: _initialization,
+        builder: (context, snapshot) {
+          // Check for errors.
+          if (snapshot.hasError) {
+            return const MaterialApp(
+              title: "Bell",
+              home: ErrorPage(),
+            );
+          }
+
+          if (snapshot.connectionState == flutterWidgets.ConnectionState.done) {
+            return const MaterialApp(
+              title: "Bell",
+              home: MyHomePage(title: 'Bell'),
+            );
+          }
+
+          return MaterialApp(
+              title: "Bell",
+              home: Scaffold(
+                  appBar: AppBar(
+                    title: const Text("Waiting for init"),
+                  ),
+                  body: const CircularProgressIndicator()));
+        });
+  }
+}
+
+class ErrorPage extends StatelessWidget {
+  const ErrorPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Something went wrong"),
+      ),
+      body: const Text("Something went wrong during initialization"),
     );
   }
 }
@@ -84,12 +131,15 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late Future<DeviceStatus> _connectedFuture;
-  bool sprayed = false;
+  late Future<NotificationSettings> _notificationSettings;
+  DateTime? _lastBell;
 
   @override
   void initState() {
     super.initState();
     _connectedFuture = ToitServer.getConnectedStatus();
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    _notificationSettings = messaging.requestPermission();
   }
 
   @override
@@ -102,6 +152,37 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            if (_lastBell != null) Text("Last bell at $_lastBell"),
+            FutureBuilder<NotificationSettings>(
+                future: _notificationSettings,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    var settings = snapshot.data!;
+                    var status = settings.authorizationStatus;
+                    switch (status) {
+                      case AuthorizationStatus.provisional:
+                      case AuthorizationStatus.authorized:
+                        print(status);
+                        FirebaseMessaging.instance.getToken().then((token) {
+                          print(token);
+                        });
+                        // We don't need to set up the background notification
+                        // handler, as a notification will be show
+                        // automatically.
+                        FirebaseMessaging.onMessage.listen((_) {
+                          setState(() {
+                            _lastBell = DateTime.now();
+                          });
+                        });
+                        return const Text("Receiving notifications");
+                      default:
+                        return const Text("Not receiving notifications");
+                    }
+                  } else if (snapshot.hasError) {
+                    return Text("$snapshot.error}");
+                  }
+                  return const CircularProgressIndicator();
+                }),
             FutureBuilder<DeviceStatus>(
                 future: _connectedFuture,
                 builder: (context, snapshot) {
@@ -122,16 +203,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: const <Widget>[
                   OutlinedButton(
-                      child: Text("Volume"),
-                      onPressed: ToitServer.changeVolume,
+                    child: Text("Volume"),
+                    onPressed: ToitServer.changeVolume,
                   ),
                   OutlinedButton(
-                      child: Text("Up"),
-                      onPressed: ToitServer.melodyUp,
+                    child: Text("Up"),
+                    onPressed: ToitServer.melodyUp,
                   ),
                   OutlinedButton(
-                      child: Text("Down"),
-                      onPressed: ToitServer.melodyDown,
+                    child: Text("Down"),
+                    onPressed: ToitServer.melodyDown,
                   )
                 ]),
           ],

@@ -29,6 +29,8 @@ environment:
 dependencies:
   grpc: ^3.0.0
   toit_api: ^1.0.0
+  firebase_core: ^1.6.0
+  firebase_messaging: ^10.0.7
   flutter:
     sdk: flutter
 
