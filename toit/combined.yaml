@@ -1,0 +1,14 @@
+# Runs the bell program every time a message is received
+# in the relevant cloud topic.
+
+name: Bell
+entrypoint: bell_combined.toit
+
+triggers:
+  on_boot: true
+  on_install: true
+
+
+pubsub:
+  subscriptions:
+    - "cloud:bell"

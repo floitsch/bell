@@ -1,0 +1,9 @@
+# Runs the bell detection program and sends a pubsub message
+# every time the bell rings.
+
+name: Bell Detection
+entrypoint: bell_trigger.toit
+
+triggers:
+  on_boot: true
+  on_install: true
