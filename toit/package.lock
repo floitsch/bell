@@ -1,7 +1,12 @@
 prefixes:
   certificate_roots: toit-cert-roots
+  http: pkg-http
 packages:
+  pkg-http:
+    url: github.com/toitlang/pkg-http
+    version: 1.8.0
+    hash: 91b51dd6bbb9ce04df3c9c9fabaded9de90fb0c9
   toit-cert-roots:
     url: github.com/toitware/toit-cert-roots
-    version: 1.0.0
-    hash: bc4e7a2382dc5accb9c6c59673a4292e2f3a5698
+    version: 1.3.1
+    hash: 487d7073bf2385b6683a264ce9217d77a9c388e2

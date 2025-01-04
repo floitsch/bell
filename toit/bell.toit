@@ -1,13 +1,11 @@
-// Copyright (C) 2021 Florian Loitsch. All rights reserved.
+// Copyright (C) 2022 Florian Loitsch. All rights reserved.
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the LICENSE file.
 
-/**
-Subscribes to the cloud:bell topic and triggers the corresponding button.
-*/
-
 import gpio
 import pubsub
+import net
+import net.tcp
 
 TOPIC ::= "cloud:bell"
 
@@ -28,6 +26,9 @@ melody_up: simulate_button UP
 melody_down: simulate_button DOWN
 
 main:
+  network := net.open
+  socket/tcp.ServerSocket := network.tcp_listen port
+  address := "http://$network.address:$socket.local_address.port"
   listen --no-blocking
 
 listen --blocking/bool:
