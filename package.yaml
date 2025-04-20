@@ -1,0 +1,7 @@
+dependencies:
+  simple-config:
+    url: github.com/floitsch/toit-simple-config
+    version: ^1.1.0
+  telegram:
+    url: github.com/floitsch/toit-telegram
+    version: ^0.5.3
