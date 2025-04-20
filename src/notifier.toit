@@ -64,11 +64,11 @@ class Notifier:
     result := config_.values.get "chat-ids"
     return result or []
 
-  bot-token_ -> string:
+  bot-token_ -> string?:
     if not config_: throw "Not started"
     return config_.values.get "bot-token"
 
-  bot-password_ -> string:
+  bot-password_ -> string?:
     if not config_: throw "Not started"
     return config_.values.get "bot-password"
 
